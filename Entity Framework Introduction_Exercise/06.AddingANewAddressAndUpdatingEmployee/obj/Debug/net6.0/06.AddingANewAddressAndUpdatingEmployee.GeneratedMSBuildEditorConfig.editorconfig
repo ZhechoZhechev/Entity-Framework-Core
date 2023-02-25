@@ -8,4 +8,4 @@ build_property.PlatformNeutralAssembly =
 build_property.EnforceExtendedAnalyzerRules = 
 build_property._SupportedPlatformList = Linux,macOS,Windows
 build_property.RootNamespace = SoftUni
-build_property.ProjectDir = C:\Users\zhech\source\repos\Entity Framework Core\Entity Framework Introduction_Exercise\SoftUni\06.AddingANewAddressAndUpdatingEmployee\
+build_property.ProjectDir = C:\Users\zhech\source\repos\Entity Framework Core\Entity Framework Introduction_Exercise\06.AddingANewAddressAndUpdatingEmployee\

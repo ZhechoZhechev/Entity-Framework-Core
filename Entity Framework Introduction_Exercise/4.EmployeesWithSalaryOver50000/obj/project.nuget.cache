@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "TrxEk6y8PBuRhuauIxmCx3w1v4vnSETawzlraTYtXTxjZi6eWvoyNHYJZuu7HQGHUQIjnigwhMhQsOOx1rRlTA==",
+  "dgSpecHash": "iiYdwg7lRLhTPiqNgIDKnK8cD2r+0RS03E1KoAOzypiQmsHpmgRRq18aALge0gA0X+o7RgBkaj0Kil3rx6VTPw==",
   "success": true,
-  "projectFilePath": "C:\\Users\\zhech\\source\\repos\\Entity Framework Core\\Entity Framework Introduction_Exercise\\SoftUni\\4.EmployeesWithSalaryOver50000\\04.EmployeesWithSalaryOver50000.csproj",
+  "projectFilePath": "C:\\Users\\zhech\\source\\repos\\Entity Framework Core\\Entity Framework Introduction_Exercise\\4.EmployeesWithSalaryOver50000\\04.EmployeesWithSalaryOver50000.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\zhech\\.nuget\\packages\\microsoft.csharp\\4.5.0\\microsoft.csharp.4.5.0.nupkg.sha512",
     "C:\\Users\\zhech\\.nuget\\packages\\microsoft.data.sqlclient\\2.1.4\\microsoft.data.sqlclient.2.1.4.nupkg.sha512",

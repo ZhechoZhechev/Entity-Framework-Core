@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "ec0P9k5MwLqy9bnBUgrBsf+q+eVbQzmiR4FMPCeApLYcUa1hnm132i2izUVi+8wIew3Xv/VwMjzmAqc+JRj46A==",
+  "dgSpecHash": "SYi+dJZ4Sn5WYg/B9v1sDZ5eATSv+2DMKf8UmB8VxmJzbsuuTh4IqlURwRPW+AbcJHUvoBqSCzcIWat5iLWsSw==",
   "success": true,
-  "projectFilePath": "C:\\Users\\zhech\\source\\repos\\Entity Framework Core\\Entity Framework Introduction_Exercise\\SoftUni\\05.EmployeesFromResearchaAndDevelopment\\05.EmployeesFromResearchaAndDevelopment.csproj",
+  "projectFilePath": "C:\\Users\\zhech\\source\\repos\\Entity Framework Core\\Entity Framework Introduction_Exercise\\05.EmployeesFromResearchaAndDevelopment\\05.EmployeesFromResearchaAndDevelopment.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\zhech\\.nuget\\packages\\microsoft.csharp\\4.5.0\\microsoft.csharp.4.5.0.nupkg.sha512",
     "C:\\Users\\zhech\\.nuget\\packages\\microsoft.data.sqlclient\\2.1.4\\microsoft.data.sqlclient.2.1.4.nupkg.sha512",
