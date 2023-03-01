@@ -2,7 +2,8 @@
 
 using Microsoft.EntityFrameworkCore;
 
-using P01_StudentSystem.Data.Common;
+using Common;
+using Models;
 
 public class StudentSystemContext : DbContext
 {
@@ -17,6 +18,16 @@ public class StudentSystemContext : DbContext
         
     }
 
+    public DbSet<Student> Students { get; set; }
+
+    public DbSet<Course> Courses { get; set; }
+
+    public DbSet<Resource> Resources { get; set; }
+
+    public DbSet<Homework> Homeworks { get; set; }
+
+    public DbSet<StudentCourse> StudentsCourses { get; set; }
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
         if (!optionsBuilder.IsConfigured) 
@@ -27,6 +38,28 @@ public class StudentSystemContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        base.OnModelCreating(modelBuilder);
+        modelBuilder.Entity<Student>(en =>
+        {
+            en.Property(p => p.PhoneNumber)
+            .IsFixedLength()
+            .IsUnicode(false);
+        });
+
+        modelBuilder.Entity<Resource>(en =>
+        {
+            en.Property(p => p.Url)
+            .IsUnicode(false);
+        });
+
+        modelBuilder.Entity<Homework>(en =>
+        {
+            en.Property(p => p.Content)
+            .IsUnicode(false);
+        });
+
+        modelBuilder.Entity<StudentCourse>(en =>
+        {
+            en.HasKey(pk => new {pk.StudentId, pk.CourseId });
+        });
     }
 }

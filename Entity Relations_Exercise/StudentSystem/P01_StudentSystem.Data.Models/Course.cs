@@ -2,28 +2,34 @@
 
 using System.ComponentModel.DataAnnotations;
 
-public class Student
+public class Course
 {
-    public Student()
+    public Course()
     {
+        this.Resources = new HashSet<Resource>();
         this.Homeworks = new HashSet<Homework>();
         this.StudentsCourses = new HashSet<StudentCourse>();
     }
 
     [Key]
-    public int StudentId { get; set; }
+    public int CourseId { get; set; }
 
+    [StringLength(80)]
     [Required]
-    [MaxLength(100)]
     public string Name { get; set; } = null!;
 
-    [StringLength(10)]
-    public string? PhoneNumber { get; set; }
+    public string? Description { get; set; }
 
     [Required]
-    public DateTime RegisteredOn { get; set; }
+    public DateTime StartDate { get; set; }
 
-    public DateTime? Birthday { get; set; }
+    [Required]
+    public DateTime EndDate { get; set; }
+
+    [Required]
+    public decimal Price { get; set; }
+
+    public ICollection<Resource> Resources { get; set; } = null!;
 
     public ICollection<Homework> Homeworks { get; set; } = null!;
 
