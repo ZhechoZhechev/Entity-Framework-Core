@@ -6,11 +6,11 @@ using ProductShop.Models;
 
 namespace ProductShop;
 
-public class StartUp {
-    public static void Main() {
+public class StartUp 
+{
+    public static void Main() 
+    {
         ProductShopContext context = new ProductShopContext();
-
-        Mapper.Initialize(cfg => cfg.AddProfile(typeof(ProductShopProfile)));
 
         string inputJson = File.ReadAllText("../../../Datasets/users.json");
 
@@ -19,21 +19,29 @@ public class StartUp {
 
         //Console.WriteLine("Database was created!");
 
-        var msg = ImportUsers(context, inputJson);
+        string msg = ImportUsers(context, inputJson);
         Console.WriteLine(msg);
     }
 
-    public static string ImportUsers(ProductShopContext context, string inputJson) {
+    public static string ImportUsers(ProductShopContext context, string inputJson)
+    {
+        var mapConfig = new MapperConfiguration(cfg => 
+        {
+            cfg.AddProfile<ProductShopProfile>();
+        });
+
+        var mapper = new Mapper(mapConfig);
+
         ImportUserDTO[] userDTOs = JsonConvert.DeserializeObject<ImportUserDTO[]>(inputJson);
 
         ICollection<User> users = new List<User>();
         foreach (var userDTO in userDTOs!) 
         {
-            User user = Mapper.Map<User>(userDTO);
+            User user = mapper.Map<User>(userDTO);
             users.Add(user);
         }
 
-        context.AddRange(users);
+        context.Users.AddRange(users);
         context.SaveChanges();
 
         return $"Successfully imported {users.Count}";
