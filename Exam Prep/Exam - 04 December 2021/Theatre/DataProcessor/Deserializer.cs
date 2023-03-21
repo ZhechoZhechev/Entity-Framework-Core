@@ -1,5 +1,6 @@
 ﻿namespace Theatre.DataProcessor
 {
+    using Newtonsoft.Json;
     using System;
     using System.Collections.Generic;
     using System.ComponentModel.DataAnnotations;
@@ -101,7 +102,50 @@
 
         public static string ImportTtheatersTickets(TheatreContext context, string jsonString)
         {
-            throw new NotImplementedException();
+            StringBuilder sb = new StringBuilder();
+            var theaterTicketsDtos = JsonConvert.DeserializeObject<ImportTheatersTicketsDto[]>(jsonString);
+
+            List<Theatre> validTheatres = new List<Theatre>();
+            List<Ticket> validTickets = new List<Ticket>();
+            foreach (var ttDto in theaterTicketsDtos)
+            {
+                if (!IsValid(ttDto))
+                {
+                    sb.AppendLine(ErrorMessage);
+                    continue;
+                }
+                Theatre theatre = new Theatre() 
+                {
+                    Name = ttDto.Name,
+                    NumberOfHalls = ttDto.NumberOfHalls,
+                    Director = ttDto.Director
+                };
+                validTheatres.Add(theatre);
+
+                foreach (var tDto in ttDto.Tickets)
+                {
+                    if (!IsValid(tDto))
+                    {
+                        sb.AppendLine(ErrorMessage);
+                        continue;
+                    }
+                    Ticket ticket = new Ticket() 
+                    {
+                        Price = tDto.Price,
+                        RowNumber = tDto.RowNumber,
+                        PlayId = tDto.PlayId
+                    };
+                    validTickets.Add(ticket);
+                    theatre.Tickets.Add(ticket);
+                }
+                sb.AppendLine(string.Format(SuccessfulImportTheatre, theatre.Name, theatre.Tickets.Count));
+
+            }
+            context.Theatres.AddRange(validTheatres);
+            context.Tickets.AddRange(validTickets);
+            context.SaveChanges();
+
+            return sb.ToString().TrimEnd();
         }
 
 
