@@ -5,12 +5,15 @@
     using System.ComponentModel.DataAnnotations;
     using System.Globalization;
     using System.IO;
+    using System.Linq;
     using System.Text;
     using System.Xml.Serialization;
     using Data;
     using Footballers.Data.Models;
     using Footballers.Data.Models.Enums;
+    using Footballers.DataProcessor.importdto;
     using Footballers.DataProcessor.ImportDto;
+    using Newtonsoft.Json;
 
     public class Deserializer
     {
@@ -86,7 +89,52 @@
         }
         public static string ImportTeams(FootballersContext context, string jsonString)
         {
-            throw new NotImplementedException();
+            StringBuilder sb = new StringBuilder();
+            var teamsDtos = JsonConvert.DeserializeObject<ImportTeamsDto[]>(jsonString);
+
+            List<Team> validTeams = new List<Team>();
+
+            foreach (var tDto in teamsDtos)
+            {
+                if (!IsValid(tDto))
+                {
+                    sb.AppendLine(ErrorMessage);
+                    continue;
+                }
+
+                Team team = new Team() 
+                {
+                    Name = tDto.Name,
+                    Nationality = tDto.Nationality,
+                    Trophies = tDto.Trophies
+                };
+                validTeams.Add(team);
+
+                foreach (int footballerId in tDto.Footballers.Distinct())
+                {
+                    var footballer = context.Footballers.Find(footballerId);
+
+                    if (footballer == null)
+                    {
+                        sb.AppendLine(ErrorMessage);
+                        continue;
+                    }
+
+
+                    TeamFootballer teamFootballer = new TeamFootballer()
+                    {
+                        Footballer = footballer,
+                        Team = team
+                    };
+                    team.TeamsFootballers.Add(teamFootballer);
+                }
+                sb.AppendLine(string.Format(SuccessfullyImportedTeam, team.Name, team.TeamsFootballers.Count));
+
+            }
+                context.Teams.AddRange(validTeams);
+                context.SaveChanges();
+
+                return sb.ToString().TrimEnd();
         }
 
         private static bool IsValid(object dto)

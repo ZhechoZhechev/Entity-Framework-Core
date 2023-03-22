@@ -23,7 +23,7 @@
 
             ImportEntities(context, projectDir + @"Datasets/", projectDir + @"ImportResults/");
 
-            //ExportEntities(context, projectDir + @"ExportResults/");
+            ExportEntities(context, projectDir + @"ExportResults/");
 
             using (var transaction = context.Database.BeginTransaction())
             {
@@ -39,11 +39,11 @@
 
             PrintAndExportEntityToFile(coaches, exportDir + "Actual Result - ImportCoaches.txt");
 
-            //var teams =
-            // DataProcessor.Deserializer.ImportTeams(context,
-            //     File.ReadAllText(baseDir + "teams.json"));
+            var teams =
+             DataProcessor.Deserializer.ImportTeams(context,
+                 File.ReadAllText(baseDir + "teams.json"));
 
-            //PrintAndExportEntityToFile(teams, exportDir + "Actual Result - ImportTeams.txt");
+            PrintAndExportEntityToFile(teams, exportDir + "Actual Result - ImportTeams.txt");
         }
 
         private static void ExportEntities(FootballersContext context, string exportDir)
