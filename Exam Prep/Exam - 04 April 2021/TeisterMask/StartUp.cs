@@ -23,7 +23,7 @@
 
             ImportEntities(context, projectDir + @"Datasets/", projectDir + @"ImportResults/");
 
-            //ExportEntities(context, projectDir + @"ExportResults/");
+            ExportEntities(context, projectDir + @"ExportResults/");
 
             using (var transaction = context.Database.BeginTransaction())
             {
@@ -31,7 +31,7 @@
             }
         }
 
-        private static void ImportEntities(TeisterMaskContext context, string baseDir, string exportDir)
+        private static void ImportEntities(TeisterMaskContext context,string baseDir, string exportDir)
         {
             var projects =
                 DataProcessor.Deserializer.ImportProjects(context,
@@ -71,18 +71,18 @@
             }
 
             var disableIntegrityChecksQuery = "EXEC sp_MSforeachtable @command1='ALTER TABLE ? NOCHECK CONSTRAINT ALL'";
-            context.Database.ExecuteSqlRaw(disableIntegrityChecksQuery);
+            context.Database.ExecuteSqlCommand(disableIntegrityChecksQuery);
 
             var deleteRowsQuery = "EXEC sp_MSforeachtable @command1='SET QUOTED_IDENTIFIER ON;DELETE FROM ?'";
-            context.Database.ExecuteSqlRaw(deleteRowsQuery);
+            context.Database.ExecuteSqlCommand(deleteRowsQuery);
 
             var enableIntegrityChecksQuery =
                 "EXEC sp_MSforeachtable @command1='ALTER TABLE ? WITH CHECK CHECK CONSTRAINT ALL'";
-            context.Database.ExecuteSqlRaw(enableIntegrityChecksQuery);
+            context.Database.ExecuteSqlCommand(enableIntegrityChecksQuery);
 
             var reseedQuery =
                 "EXEC sp_MSforeachtable @command1='IF OBJECT_ID(''?'') IN (SELECT OBJECT_ID FROM SYS.IDENTITY_COLUMNS) DBCC CHECKIDENT(''?'', RESEED, 0)'";
-            context.Database.ExecuteSqlRaw(reseedQuery);
+            context.Database.ExecuteSqlCommand(reseedQuery);
         }
 
         private static void PrintAndExportEntityToFile(string entityOutput, string outputPath)
@@ -95,7 +95,7 @@
         {
             var currentDirectory = Directory.GetCurrentDirectory();
             var directoryName = Path.GetFileName(currentDirectory);
-            var relativePath = directoryName.StartsWith("net6.0") ? @"../../../" : string.Empty;
+            var relativePath = directoryName.StartsWith("netcoreapp") ? @"../../../" : string.Empty;
 
             return relativePath;
         }

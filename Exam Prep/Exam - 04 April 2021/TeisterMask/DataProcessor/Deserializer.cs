@@ -2,17 +2,24 @@
 
 namespace TeisterMask.DataProcessor
 {
+    using System;
+    using System.IO;
+    using System.Linq;
+    using System.Text;
+    using System.Globalization;
+    using System.Xml.Serialization;
+    using System.Collections.Generic;
+
+    using Newtonsoft.Json;
     using System.ComponentModel.DataAnnotations;
+
+    using ImportDto;
+    using Data.Models;
+    using Data.Models.Enums;
+
     using ValidationContext = System.ComponentModel.DataAnnotations.ValidationContext;
 
     using Data;
-    using System.Xml.Serialization;
-    using TeisterMask.DataProcessor.ImportDto;
-    using System.Globalization;
-    using System.Text;
-    using TeisterMask.Data.Models;
-    using TeisterMask.Data.Models.Enums;
-    using Newtonsoft.Json;
 
     public class Deserializer
     {
@@ -26,78 +33,129 @@ namespace TeisterMask.DataProcessor
 
         public static string ImportProjects(TeisterMaskContext context, string xmlString)
         {
-            ImportProjectDto[] projectDtos = Deserialize<ImportProjectDto[]>(xmlString, "Projects");
             StringBuilder sb = new StringBuilder();
+
+            XmlSerializer xmlSerializer = new XmlSerializer(typeof(ImportProjectDto[]), new XmlRootAttribute("Projects"));
+
+            using StringReader stringReader = new StringReader(xmlString);
+
+            ImportProjectDto[] projectDtos = (ImportProjectDto[])xmlSerializer.Deserialize(stringReader);
+
             List<Project> projects = new List<Project>();
 
-            foreach (var projectDto in projectDtos)
+            foreach (ImportProjectDto projectDto in projectDtos)
             {
-                bool isProjectOpenDateValid = DateTime.TryParseExact(projectDto.OpenDate, "dd/MM/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime validProjectOpenDate);
-                                
-                bool isProjectDueDateValid = DateTime.TryParseExact(projectDto.DueDate, "dd/MM/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime parsedProjectDueDate);
-                
-                if (!IsValid(projectDto) 
-                    || !isProjectOpenDateValid 
-                    || (!string.IsNullOrWhiteSpace(projectDto.DueDate) && !isProjectDueDateValid))
+                if (!IsValid(projectDto))
                 {
                     sb.AppendLine(ErrorMessage);
                     continue;
                 }
 
-                DateTime? validProjectDueDate = string.IsNullOrWhiteSpace(projectDto.DueDate)
-                    ? null
-                    : parsedProjectDueDate;
+                DateTime openDate;
+                bool isOpenDateValid = DateTime.TryParseExact(projectDto.OpenDate, "dd/MM/yyyy",
+                    CultureInfo.InvariantCulture, DateTimeStyles.None, out openDate);
 
-                Project project = new Project()
+                if (!isOpenDateValid)
                 {
-                    Name = projectDto.Name,
-                    OpenDate = validProjectOpenDate,
-                    DueDate = validProjectDueDate
-                };
+                    sb.AppendLine(ErrorMessage);
+                    continue;
+                }
 
-                List<Task> tasks = new List<Task>();
-                foreach (var taskDto in projectDto.Tasks)
+                DateTime? dueDate = null;
+
+                if (!String.IsNullOrWhiteSpace(projectDto.DueDate))
                 {
-                    bool isTaskOpenDateValid = DateTime.TryParseExact(taskDto.OpenDate, "dd/MM/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime validTaskOpenDate);
-                    bool isTaskDueDateValid = DateTime.TryParseExact(taskDto.DueDate, "dd/MM/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime validTaskDueDate);
+                    DateTime dueDateDt;
+                    bool isDueDateValid = DateTime.TryParseExact(projectDto.DueDate, "dd/MM/yyyy",
+                        CultureInfo.InvariantCulture, DateTimeStyles.None, out dueDateDt);
 
-                    if (!IsValid(taskDto) 
-                        || !isTaskOpenDateValid 
-                        || !isTaskDueDateValid 
-                        || validTaskOpenDate < validProjectOpenDate
-                        || (validProjectDueDate != null && validTaskDueDate > validProjectDueDate))
+                    if (!isDueDateValid)
                     {
                         sb.AppendLine(ErrorMessage);
                         continue;
                     }
 
-                    Task task = new Task()
+                    dueDate = dueDateDt;
+                }
+
+                Project p = new Project()
+                {
+                    Name = projectDto.Name,
+                    OpenDate = openDate,
+                    DueDate = dueDate
+                };
+
+                foreach (ImportProjectTasksDto taskDto in projectDto.Tasks)
+                {
+                    if (!IsValid(taskDto))
+                    {
+                        sb.AppendLine(ErrorMessage);
+                        continue;
+                    }
+
+                    DateTime taskOpenDate;
+                    bool isTaskOpenDateValid = DateTime.TryParseExact(taskDto.OpenDate, "dd/MM/yyyy",
+                        CultureInfo.InvariantCulture, DateTimeStyles.None, out taskOpenDate);
+
+                    if (!isTaskOpenDateValid)
+                    {
+                        sb.AppendLine(ErrorMessage);
+                        continue;
+                    }
+
+                    DateTime taskDueDate;
+                    bool isTaskDueDateValid = DateTime.TryParseExact(taskDto.DueDate, "dd/MM/yyyy",
+                        CultureInfo.InvariantCulture, DateTimeStyles.None, out taskDueDate);
+
+                    if (!isTaskDueDateValid)
+                    {
+                        sb.AppendLine(ErrorMessage);
+                        continue;
+                    }
+
+                    if (taskOpenDate < openDate)
+                    {
+                        sb.AppendLine(ErrorMessage);
+                        continue;
+                    }
+
+                    if (dueDate.HasValue && taskDueDate > dueDate.Value)
+                    {
+                        sb.AppendLine(ErrorMessage);
+                        continue;
+                    }
+
+                    Task t = new Task()
                     {
                         Name = taskDto.Name,
-                        OpenDate = validTaskOpenDate,
-                        DueDate = validTaskDueDate,
+                        OpenDate = taskOpenDate,
+                        DueDate = taskDueDate,
                         ExecutionType = (ExecutionType)taskDto.ExecutionType,
-                        LabelType = (LabelType)taskDto.LabelType,
-                        ProjectId = project.Id
+                        LabelType = (LabelType)taskDto.LabelType
                     };
-                    tasks.Add(task);
+
+                    p.Tasks.Add(t);
                 }
-                project.Tasks = tasks;
-                projects.Add(project);
-                sb.AppendLine(String.Format(SuccessfullyImportedProject, project.Name, project.Tasks.Count));
+
+                projects.Add(p);
+                sb.AppendLine(String.Format(SuccessfullyImportedProject, p.Name, p.Tasks.Count));
             }
+
             context.Projects.AddRange(projects);
             context.SaveChanges();
+
             return sb.ToString().TrimEnd();
         }
 
         public static string ImportEmployees(TeisterMaskContext context, string jsonString)
         {
-            ImportEmployeeDto[] employeeDtos = JsonConvert.DeserializeObject<ImportEmployeeDto[]>(jsonString);
             StringBuilder sb = new StringBuilder();
+
+            ImportEmployeeDto[] employeeDtos = JsonConvert.DeserializeObject<ImportEmployeeDto[]>(jsonString);
+
             List<Employee> employees = new List<Employee>();
 
-            foreach (var employeeDto in employeeDtos)
+            foreach (ImportEmployeeDto employeeDto in employeeDtos)
             {
                 if (!IsValid(employeeDto))
                 {
@@ -105,46 +163,37 @@ namespace TeisterMask.DataProcessor
                     continue;
                 }
 
-                Employee employee = new Employee()
+                Employee e = new Employee()
                 {
                     Username = employeeDto.Username,
                     Email = employeeDto.Email,
-                    Phone = employeeDto.Phone,
+                    Phone = employeeDto.Phone
                 };
 
-                int[] validTaskIds = context.Tasks.Select(t => t.Id).ToArray();
-                
                 foreach (int taskId in employeeDto.Tasks.Distinct())
                 {
-                    if (!validTaskIds.Contains(taskId))
+                    Task t = context.Tasks.Find(taskId);
+
+                    if (t == null)
                     {
                         sb.AppendLine(ErrorMessage);
                         continue;
                     }
 
-                    employee.EmployeesTasks.Add(new EmployeeTask()
+                    e.EmployeesTasks.Add(new EmployeeTask()
                     {
-                        EmployeeId = employee.Id,
-                        TaskId = taskId
+                        Task = t
                     });
                 }
-                employees.Add(employee);
-                sb.AppendLine(String.Format(SuccessfullyImportedEmployee, employee.Username, employee.EmployeesTasks.Count));
+
+                employees.Add(e);
+                sb.AppendLine(String.Format(SuccessfullyImportedEmployee, e.Username, e.EmployeesTasks.Count));
             }
+
             context.Employees.AddRange(employees);
             context.SaveChanges();
+
             return sb.ToString().TrimEnd();
-        }
-
-        private static T Deserialize<T>(string inputXml, string rootName)
-        {
-            XmlRootAttribute root = new XmlRootAttribute(rootName);
-            XmlSerializer serializer = new XmlSerializer(typeof(T), root);
-
-            using StringReader reader = new StringReader(inputXml);
-
-            T dtos = (T)serializer.Deserialize(reader);
-            return dtos;
         }
 
         private static bool IsValid(object dto)

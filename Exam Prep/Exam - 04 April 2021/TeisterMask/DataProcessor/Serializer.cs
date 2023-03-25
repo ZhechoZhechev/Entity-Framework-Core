@@ -1,27 +1,39 @@
 ﻿namespace TeisterMask.DataProcessor
 {
-    using Castle.DynamicProxy.Generators;
-    using Data;
-    using Newtonsoft.Json;
-    using System.Globalization;
+    using System;
+    using System.IO;
+    using System.Linq;
     using System.Text;
+    using System.Globalization;
     using System.Xml.Serialization;
-    using TeisterMask.DataProcessor.ExportDto;
+
+    using AutoMapper;
+
+    using Newtonsoft.Json;
+
+    using Data;
+    using Data.Models;
+    using ExportDto;
+
+    using Formatting = Newtonsoft.Json.Formatting;
+    using System.Xml;
+    using System.Xml.Linq;
 
     public class Serializer
     {
         public static string ExportProjectWithTheirTasks(TeisterMaskContext context)
         {
-            ExportProjectDto[] projectDtos = context
-                .Projects
+            var projTaskDtos = context.Projects
                 .Where(p => p.Tasks.Any())
-                .ToArray()
-                .Select(p => new ExportProjectDto()
+                .OrderByDescending(p => p.Tasks.Count())
+                .ThenBy(p => p.Name)
+                .Select(p => new ExportProjectsTasksDto() 
                 {
-                    TasksCount = p.Tasks.Count,
+                    TasksCount = p.Tasks.Count().ToString(),
                     ProjectName = p.Name,
                     HasEndDate = p.DueDate == null ? "No" : "Yes",
-                    Tasks = p.Tasks.Select(t => new ExportTaskDto()
+                    Tasks = p.Tasks
+                    .Select(t => new TasksDto() 
                     {
                         Name = t.Name,
                         Label = t.LabelType.ToString()
@@ -29,57 +41,65 @@
                     .OrderBy(t => t.Name)
                     .ToArray()
                 })
-                .OrderByDescending(p => p.TasksCount)
-                .ThenBy(p => p.ProjectName)
                 .ToArray();
 
-            return Serialize<ExportProjectDto[]>(projectDtos, "Projects");
+            var output = Serialize<ExportProjectsTasksDto[]>(projTaskDtos, "Projects");
+            return output;
         }
 
         public static string ExportMostBusiestEmployees(TeisterMaskContext context, DateTime date)
         {
-            var busiestEmployees = context
-                .Employees
-                .Where(e => e.EmployeesTasks.Any(et => et.Task.OpenDate >= date))                
+            var employeesDtos = context.Employees
+                .Where(e => e.EmployeesTasks.Any(t => t.Task.OpenDate >= date))
                 .ToArray()
                 .Select(e => new
                 {
-                    Username = e.Username,
+                    e.Username,
                     Tasks = e.EmployeesTasks
-                        .Where(et => et.Task.OpenDate >= date)
-                        .OrderByDescending(et => et.Task.DueDate)
-                        .ThenBy(et => et.Task.Name)
-                        .Select(et => new
-                        {
-                            TaskName = et.Task.Name,
-                            OpenDate = et.Task.OpenDate.ToString("d", CultureInfo.InvariantCulture),
-                            DueDate = et.Task.DueDate.ToString("d", CultureInfo.InvariantCulture),
-                            LabelType = et.Task.LabelType.ToString(),
-                            ExecutionType = et.Task.ExecutionType.ToString()
-                        })
-                        .ToArray()
+                    .Where(t => t.Task.OpenDate >= date)
+                    .OrderByDescending(t => t.Task.DueDate)
+                    .ThenBy(t => t.Task.Name)
+                    .Select(t => new
+                    {
+                        TaskName = t.Task.Name,
+                        OpenDate = t.Task.OpenDate.ToString("d", CultureInfo.InvariantCulture),
+                        DueDate = t.Task.DueDate.ToString("d", CultureInfo.InvariantCulture),
+                        LabelType = t.Task.LabelType.ToString(),
+                        ExecutionType = t.Task.ExecutionType.ToString()
+                    })
+                    .ToArray()
                 })
                 .OrderByDescending(e => e.Tasks.Count())
                 .ThenBy(e => e.Username)
                 .Take(10)
                 .ToArray();
 
-            return JsonConvert.SerializeObject(busiestEmployees, Formatting.Indented);
+            var output = JsonConvert.SerializeObject(employeesDtos, Formatting.Indented);
+            return output;
         }
 
         private static string Serialize<T>(T dataTransferObjects, string xmlRootAttributeName)
         {
             XmlSerializer serializer = new XmlSerializer(typeof(T), new XmlRootAttribute(xmlRootAttributeName));
-
+            
             StringBuilder sb = new StringBuilder();
-            using var write = new StringWriter(sb);
+
+            using var write = new SWEncodingCustom(sb);
+
 
             XmlSerializerNamespaces xmlNamespaces = new XmlSerializerNamespaces();
             xmlNamespaces.Add(string.Empty, string.Empty);
 
             serializer.Serialize(write, dataTransferObjects, xmlNamespaces);
-
             return sb.ToString();
+        }
+
+        public class SWEncodingCustom : StringWriter
+        {
+            public SWEncodingCustom(StringBuilder sb) :base(sb)
+            {
+            }
+            public override Encoding Encoding => Encoding.UTF8;
         }
     }
 }

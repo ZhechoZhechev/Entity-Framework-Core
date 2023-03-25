@@ -3,24 +3,21 @@
     using Microsoft.EntityFrameworkCore;
 
     using Models;
-    using System.Collections.Generic;
-    using System.Reflection.Emit;
 
     public class TeisterMaskContext : DbContext
     {
-        public TeisterMaskContext() 
-        {
-        }
+        public TeisterMaskContext() { }
 
         public TeisterMaskContext(DbContextOptions options)
-            : base(options) 
-        {
-        }
+            : base(options) { }
 
         public DbSet<Employee> Employees { get; set; }
-        public DbSet<EmployeeTask> EmployeesTasks { get; set; }
-        public DbSet<Project> Projects { get; set; }
+
         public DbSet<Task> Tasks { get; set; }
+
+        public DbSet<Project> Projects { get; set; }
+
+        public DbSet<EmployeeTask> EmployeesTasks { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -33,9 +30,9 @@
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<EmployeeTask>(entity =>
+            modelBuilder.Entity<EmployeeTask>(e =>
             {
-                entity.HasKey(et => new { et.TaskId, et.EmployeeId });
+                e.HasKey(et => new { et.EmployeeId, et.TaskId });
             });
         }
     }

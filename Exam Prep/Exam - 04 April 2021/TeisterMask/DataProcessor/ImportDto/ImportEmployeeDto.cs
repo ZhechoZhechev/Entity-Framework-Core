@@ -1,18 +1,25 @@
-﻿using System.ComponentModel.DataAnnotations;
-
-namespace TeisterMask.DataProcessor.ImportDto
+﻿namespace TeisterMask.DataProcessor.ImportDto
 {
+    using System.ComponentModel.DataAnnotations;
+
+    using Shared;
+
     public class ImportEmployeeDto
-    {        
-        [Required, MinLength(3), MaxLength(40), RegularExpression("^[A-Za-z0-9]+$")]
+    {
+        [Required]
+        [MinLength(GlobalConstants.EmployeeUsernameMinLength)]
+        [MaxLength(GlobalConstants.EmployeeUsernameMaxLength)]
+        [RegularExpression(GlobalConstants.EmployeeUsernameRegex)]
         public string Username { get; set; }
-        
-        [Required, RegularExpression(@"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$")]
+
+        [Required]
+        [EmailAddress]
         public string Email { get; set; }
-        
-        [Required, RegularExpression(@"^\d{3}-\d{3}-\d{4}$")]
+
+        [Required]
+        [RegularExpression(GlobalConstants.EmployeePhoneRegex)]
         public string Phone { get; set; }
-        
+
         public int[] Tasks { get; set; }
     }
 }
