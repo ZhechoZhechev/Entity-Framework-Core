@@ -4,6 +4,11 @@
 
     public class User
     {
+        public User()
+        {
+            this.Cards = new HashSet<Card>();
+        }
+
         [Key]
         public int Id { get; set; }
 
