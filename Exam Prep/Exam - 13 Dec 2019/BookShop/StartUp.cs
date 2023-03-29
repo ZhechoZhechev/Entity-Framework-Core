@@ -22,7 +22,7 @@
 
             ImportEntities(context, projectDir + @"Datasets/", projectDir + @"ImportResults/");
 
-            //ExportEntities(context, projectDir + @"ExportResults/");
+            ExportEntities(context, projectDir + @"ExportResults/");
 
             using (var transaction = context.Database.BeginTransaction())
             {
@@ -96,7 +96,7 @@
         {
             var currentDirectory = Directory.GetCurrentDirectory();
             var directoryName = Path.GetFileName(currentDirectory);
-            var relativePath = directoryName.StartsWith("netcoreapp") ? @"../../../" : string.Empty;
+            var relativePath = directoryName.StartsWith("net6.0") ? @"../../../" : string.Empty;
 
             return relativePath;
         }
