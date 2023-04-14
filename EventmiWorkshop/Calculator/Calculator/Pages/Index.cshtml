@@ -1,0 +1,14 @@
+﻿@page
+@model IndexModel
+
+<h1>Calculator</h1>
+
+<form method="post">
+    <input type="text" asp-for="Expression" />
+    <button type="submit">Calculate</button>
+</form>
+
+@if (!string.IsNullOrEmpty(Model.Result))
+{
+    <p>Result: @Model.Result</p>
+}
