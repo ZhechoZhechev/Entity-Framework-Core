@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using QuizzWeb.Core.Contracts;
+using QuizzWeb.Core.Models;
 using QuizzWeb.Data;
 using QuizzWeb.Infrastructure.Data.Models;
 
@@ -12,37 +15,55 @@ namespace QuizzWeb.Controllers
 {
     public class QuizzsController : Controller
     {
-        private readonly ApplicationDbContext _context;
-
-        public QuizzsController(ApplicationDbContext context)
+        private readonly IQuizzService quizzService;
+        private readonly ILogger logger;
+        public QuizzsController(IQuizzService _quizzService, ILogger<QuizzsController> _logger)
         {
-            _context = context;
+            quizzService = _quizzService;
+            logger = _logger;
         }
 
         // GET: Quizzs
+        [HttpGet]
         public async Task<IActionResult> Index()
         {
-              return _context.Quizzes != null ? 
-                          View(await _context.Quizzes.ToListAsync()) :
-                          Problem("Entity set 'ApplicationDbContext.Quizzes'  is null.");
+            IEnumerable<QuizzModel> model = Enumerable.Empty<QuizzModel>();
+
+            try
+            {
+                model = await quizzService.GetAllAsync();
+            }
+            catch (Exception ex)
+            {
+                logger.LogError("QuizzsController/Index,", ex);
+                ViewBag.ErrorMassage = "Unexpected error occurred";
+            }
+
+            return View(model);
         }
 
         // GET: Quizzs/Details/5
+        [HttpGet]
         public async Task<IActionResult> Details(int? id)
         {
-            if (id == null || _context.Quizzes == null)
+            QuizzModel model;
+
+            try
             {
-                return NotFound();
+                model = await quizzService.GetQuizzAsync(id ?? 0);
+                return View(model);
+            }
+            catch (ArgumentException aex)
+            {
+                ViewBag.ErrorMessage = aex.Message;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError("QuizzsController/Details,", ex);
+                ViewBag.ErrorMassage = "Unexpected error occurred";
             }
 
-            var quizz = await _context.Quizzes
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (quizz == null)
-            {
-                return NotFound();
-            }
-
-            return View(quizz);
+            return RedirectToAction(nameof(Index));
         }
 
         // GET: Quizzs/Create
@@ -56,31 +77,47 @@ namespace QuizzWeb.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Name")] Quizz quizz)
+        public async Task<IActionResult> Create([Bind("Name")] QuizzModel model)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                _context.Add(quizz);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                return View(model);
             }
-            return View(quizz);
-        }
 
+            try
+            {
+                await quizzService.CreateQuizzAsync(model);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError("QuizzsController/Create,", ex);
+                ViewBag.ErrorMassage = "Unexpected error occurred";
+            }
+            return RedirectToAction(nameof(Index));
+        }
         // GET: Quizzs/Edit/5
+        [HttpGet]
         public async Task<IActionResult> Edit(int? id)
         {
-            if (id == null || _context.Quizzes == null)
+            QuizzModel model;
+
+            try
             {
-                return NotFound();
+                model = await quizzService.GetQuizzAsync(id?? 0);
+
+                return View(model);
+            }
+            catch(ArgumentException ae) 
+            {
+                ViewBag.ErrorMassage = ae.Message;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError("QuizzsController/Edit,", ex);
+                ViewBag.ErrorMassage = "Unexpected error occurred";
             }
 
-            var quizz = await _context.Quizzes.FindAsync(id);
-            if (quizz == null)
-            {
-                return NotFound();
-            }
-            return View(quizz);
+            return RedirectToAction(nameof(Index));
         }
 
         // POST: Quizzs/Edit/5
@@ -88,52 +125,53 @@ namespace QuizzWeb.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Name")] Quizz quizz)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Name")] QuizzModel model)
         {
-            if (id != quizz.Id)
+            if (!ModelState.IsValid) 
             {
-                return NotFound();
+                return View(model);
             }
 
-            if (ModelState.IsValid)
+            try
             {
-                try
-                {
-                    _context.Update(quizz);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!QuizzExists(quizz.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
-                return RedirectToAction(nameof(Index));
+                await quizzService.UpdateAsync(model);
+
+                return RedirectToAction(nameof(Details), new {id = model.Id });
             }
-            return View(quizz);
+            catch (ArgumentException ae)
+            {
+                ViewBag.ErrorMassage = ae.Message;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError("QuizzsController/Edit,", ex);
+                ViewBag.ErrorMassage = "Unexpected error occurred";
+            }
+            return RedirectToAction(nameof(Index));
         }
 
         // GET: Quizzs/Delete/5
+        [HttpGet]
         public async Task<IActionResult> Delete(int? id)
         {
-            if (id == null || _context.Quizzes == null)
+            QuizzModel model;
+
+            try
             {
-                return NotFound();
+                model = await quizzService.GetQuizzAsync(id ?? 0);
+                return View(model);
+            }
+            catch (ArgumentException aex)
+            {
+                ViewBag.ErrorMessage = aex.Message;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError("QuizzsController/Delete,", ex);
+                ViewBag.ErrorMassage = "Unexpected error occurred";
             }
 
-            var quizz = await _context.Quizzes
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (quizz == null)
-            {
-                return NotFound();
-            }
-
-            return View(quizz);
+            return RedirectToAction(nameof(Index));
         }
 
         // POST: Quizzs/Delete/5
@@ -141,23 +179,22 @@ namespace QuizzWeb.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            if (_context.Quizzes == null)
+            try
             {
-                return Problem("Entity set 'ApplicationDbContext.Quizzes'  is null.");
+                await quizzService.DeleteAsync(id);
             }
-            var quizz = await _context.Quizzes.FindAsync(id);
-            if (quizz != null)
+            catch (ArgumentException aex)
             {
-                _context.Quizzes.Remove(quizz);
+                ViewBag.ErrorMessage = aex.Message;
             }
-            
-            await _context.SaveChangesAsync();
+            catch (Exception ex)
+            {
+                logger.LogError("QuizzsController/Delete,", ex);
+                ViewBag.ErrorMassage = "Unexpected error occurred";
+            }
+
             return RedirectToAction(nameof(Index));
         }
 
-        private bool QuizzExists(int id)
-        {
-          return (_context.Quizzes?.Any(e => e.Id == id)).GetValueOrDefault();
-        }
     }
 }
