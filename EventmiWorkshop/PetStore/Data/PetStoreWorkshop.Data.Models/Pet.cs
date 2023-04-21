@@ -45,6 +45,13 @@ public class Pet : BaseDeletableModel<string>
     public decimal Price { get; set; }
 
     /// <summary>
+    /// Gets or sets link to an image.
+    /// </summary>
+    [Comment("Link to an image")]
+    [Required]
+    public string ImageURL { get; set; }
+
+    /// <summary>
     /// Gets or sets foreign key to a category.
     /// </summary>
     [Comment("Foreign key to a category")]
