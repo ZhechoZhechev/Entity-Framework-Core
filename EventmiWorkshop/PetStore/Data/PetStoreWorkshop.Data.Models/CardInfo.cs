@@ -54,5 +54,5 @@ public class CardInfo : BaseDeletableModel<string>
     [ForeignKey(nameof(Client))]
     public string ClientId { get; set; }
 
-    public Client Client { get; set; }
+    public virtual Client Client { get; set; }
 }

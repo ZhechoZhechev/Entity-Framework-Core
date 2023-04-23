@@ -1,0 +1,42 @@
+﻿@model PetStoreWorkshop.Web.ViewModels.Product.DetailsProductViewModel
+
+@{
+    ViewData["Title"] = "Product-Details";
+}
+
+<h1>Details</h1>
+
+<div>
+    <h4>Product</h4>
+    <hr />
+    <dl class="row">
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.Name)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Name)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.Price)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Price)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayName("")
+        </dt>
+        <dd class="col-sm-10">
+            <img src="@Model.ImageURL" alt="@Model.Name" class="img-thumbnail" width="140" height="140" />
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayName("Category")
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.CategoryName)
+        </dd>
+    </dl>
+</div>
+
+<div>
+    <a asp-action="All" class="btn" style="background-color: antiquewhite; color: white;">Back</a>
+</div>

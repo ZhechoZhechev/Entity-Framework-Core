@@ -10,6 +10,11 @@ namespace PetStoreWorkshop.Data.Models.Common
 
         // Product constants
         public const int ProductNameLength = 50;
+        public const int ProductMinLength = 3;
+        public const string EmptyNameErrorMassage = "Can not be empty";
+        public const string EmptyImageURLErrorMassage = "Can not be empty";
+        public const string ProductPriceMinValue = "0";
+        public const string ProductPriceMaxValue = "79228162514264337593543950335";
 
         // Store constants
         public const int StoreNameLength = 50;

@@ -16,7 +16,7 @@
             </p>
         }
 
-        @foreach (string category in Model.AllCategories)
+        @foreach (string category in Model.AllCategories.Distinct())
         {
             <div class="form-check form-check-inline">
                 <input class="form-check-input" type="checkbox" id="@category" name="categoryCheckbox" value="@category">
@@ -87,14 +87,15 @@
     (function () {
         let checkBoxes = document.getElementsByName("categoryCheckbox");
         console.log(checkBoxes);
-        for (let box of checkBoxes) {
 
+        for (let box of checkBoxes) {
             box.addEventListener('click', (e) => {
                 let targetValue = e.target.value;
 
                 let tableRows = document.getElementsByName("trData");
                 let rowsToDelete = [];
-                ; for (let row of tableRows) {
+
+                for (let row of tableRows) {
                     let categoryOfRow = row.childNodes[row.childNodes.length - 2].childNodes[0].data.trim();
 
                     if (categoryOfRow !== targetValue) {
@@ -102,7 +103,15 @@
                     }
                 }
 
-                for (let row of rowsToDelete) { row.parentNode.removeChild(row); }
+                if (e.target.checked) {
+                    for (let row of rowsToDelete) {
+                        row.style.display = "none";
+                    }
+                } else {
+                    for (let row of tableRows) {
+                        row.style.display = "table-row";
+                    }
+                }
             });
         }
     })();

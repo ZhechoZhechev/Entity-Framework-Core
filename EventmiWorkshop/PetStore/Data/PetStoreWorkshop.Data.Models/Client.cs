@@ -38,7 +38,7 @@ public class Client : ApplicationUser
     [ForeignKey(nameof(Address))]
     public int AddressId { get; set; }
 
-    public Address Address { get; set; }
+    public virtual Address Address { get; set; }
 
     /// <summary>
     /// Gets or sets foreign key to client card.

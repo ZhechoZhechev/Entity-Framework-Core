@@ -15,4 +15,6 @@ public interface IProductService
     ICollection<string> GetAllProductCategories();
 
     Task<Product> GetProductByIdAsync(string productId);
+
+    Task AdProductAsync(Product product);
 }

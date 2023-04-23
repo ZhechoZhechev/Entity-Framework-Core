@@ -35,7 +35,11 @@ public class Program
     private static void ConfigureServices(IServiceCollection services, IConfiguration configuration)
     {
         services.AddDbContext<ApplicationDbContext>(
-            options => options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
+            options =>
+            {
+                options.UseSqlServer(configuration.GetConnectionString("DefaultConnection"));
+                options.UseLazyLoadingProxies();
+            });
 
         services.AddDefaultIdentity<ApplicationUser>(IdentityOptionsProvider.GetIdentityOptions)
             .AddRoles<ApplicationRole>().AddEntityFrameworkStores<ApplicationDbContext>();
@@ -66,6 +70,7 @@ public class Program
         services.AddTransient<IEmailSender, NullMessageSender>();
         services.AddTransient<ISettingsService, SettingsService>();
         services.AddTransient<IProductService, ProductService>();
+        services.AddTransient<ICategoryService, CategoryService>();
     }
 
     private static void Configure(WebApplication app)

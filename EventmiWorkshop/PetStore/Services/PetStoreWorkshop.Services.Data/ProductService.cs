@@ -19,6 +19,12 @@ public class ProductService : IProductService
         this.productRepo = productRepo;
     }
 
+    public async Task AdProductAsync(Product product)
+    {
+        await this.productRepo.AddAsync(product);
+        await this.productRepo.SaveChangesAsync();
+    }
+
     public ICollection<string> GetAllProductCategories()
     {
         return this.productRepo.AllAsNoTracking()
@@ -49,7 +55,7 @@ public class ProductService : IProductService
 
     public async Task<Product> GetProductByIdAsync(string productId)
     {
-        return await this.productRepo.AllAsNoTracking()
+        return await this.productRepo.All()
             .FirstOrDefaultAsync(p => p.Id == productId);
     }
 }
